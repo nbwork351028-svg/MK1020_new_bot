@@ -1,27 +1,32 @@
-name: News Bot
+name: KZ News Bot
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+    - cron: '0 */2 * * *'
   workflow_dispatch:
 
 jobs:
-  news:
+  publish:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
+      - name: Restore seen cache
+        uses: actions/cache@v4
+        with:
+          path: seen.json
+          key: seen-${{ github.run_id }}
+          restore-keys: seen-
+
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: '3.11'
 
-      - name: Install packages
-        run: |
-          pip install requests feedparser
+      - run: pip install anthropic feedparser requests
 
       - name: Run bot
         env:
-          BOT_TOKEN: ${{ secrets.BOT_TOKEN }}
-          CHANNEL_ID: ${{ secrets.CHANNEL_ID }}
-        run: python bot.py
+          ANTHROPIC_API_KEY:   ${{ secrets.ANTHROPIC_API_KEY }}
+          TELEGRAM_BOT_TOKEN:  ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHANNEL_ID: ${{ secrets.TELEGRAM_CHANNEL_ID }}
+        run: python news_bot.py
